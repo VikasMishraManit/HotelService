@@ -4,7 +4,7 @@ For simple Db query , if we could write some js/ts code to interacting with the 
 
 ## Definitions
 
-ORM : Object Relational Mapper ( for rdbms data) .
+ORM : Object Relational Mapper ( for rdbms data) ,
 ODM : Object document mapper (for document data like mongodb)
 
 ORM/ODM is a library which enables us to write db interactions in native language.
@@ -28,12 +28,12 @@ Seed data means initial data.
 
 ## Setup
 
-orm : sequelize
-driver : mysql2 ( driver of mysql)
+orm : sequelize,
+driver : mysql2 ( driver of mysql),
 cli : sequelizecli (as dev dependency) 
 
 1) Write a file .sequelizerc file . It has configurations which are picked up by cli
-/*
+```
 const path = require('path');
 
 module.exports = {
@@ -42,7 +42,7 @@ module.exports = {
   migrationsPath : path.resolve('./src/db/migrations'),
   config : path.resolve('./src/config/config.ts')
 }
-*/
+```
 
 2) go to main folder cd ..
 npx sequelize-cli init
@@ -56,17 +56,16 @@ Now folders as per the .sequelizerc file will be created
 ## Setting the config file
 
 1) Import from .env
-/*
+```
 PORT=3000
 DB_USER=root
 DB_PASSWORD=sql@12345
 DB_NAME=airbnb_dev
 DB_HOST=localhost
-*/
+```
 
 2) Now go to index.ts and define the type for db config and export it
-/*
-
+```
 // This file contains all the basic configuration logic for the app server to work
 import dotenv from 'dotenv';
 
@@ -98,10 +97,10 @@ export const dbConfig: DBConfig = {
     DB_NAME: process.env.DB_NAME || 'hotel_service_dev',
     DB_HOST: process.env.DB_HOST || 'localhost'
 };
-*/
+```
 
 3) Now change the config.ts file 
-/*
+```
 import { dbConfig } from './index';
 
 const config = {
@@ -115,7 +114,7 @@ const config = {
 }
 
 export default config;
-*/
+```
 
 
 
