@@ -4,7 +4,7 @@ For simple Db query , if we could write some js/ts code to interacting with the 
 
 ## Definitions
 
-ORM : Object Relational Mapper ( for rdbms data) ,
+ORM : Object Relational Mapper ( for rdbms data).  
 ODM : Object document mapper (for document data like mongodb)
 
 ORM/ODM is a library which enables us to write db interactions in native language.
@@ -40,12 +40,15 @@ module.exports = {
   seedersPath : path.resolve('./src/db/seeders'),
   modelsPath  : path.resolve('./src/db/models'),
   migrationsPath : path.resolve('./src/db/migrations'),
-  config : path.resolve('./src/config/config.ts')
+  config : path.resolve('./src/config/config.js')
 }
 ```
 
-2) go to main folder cd ..
+2) go to main folder 
+```
+cd ..
 npx sequelize-cli init
+```
 
 Now folders as per the .sequelizerc file will be created
 
@@ -53,7 +56,7 @@ Now folders as per the .sequelizerc file will be created
 3) Now setup the config.ts as described
 
 
-## Setting the config file
+## Setting the config file (it is config.js only)
 
 1) Import from .env
 ```
@@ -99,16 +102,17 @@ export const dbConfig: DBConfig = {
 };
 ```
 
-3) Now change the config.ts file 
+3) Now change the config.js file 
 ```
-import { dbConfig } from './index';
+import dotenv from 'dotenv';
+dotenv.config();
 
 const config = {
   development: {
-    username: dbConfig.DB_USER,
-    password: dbConfig.DB_PASSWORD,
-    database:   dbConfig.DB_NAME,
-    host:     dbConfig.DB_HOST,
+    username: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    host:     process.env.DB_HOST,
     dialect: 'mysql',
   }
 }
@@ -120,9 +124,59 @@ export default config;
 
 ## Check whether sequelize is able to connect to db
 
+We will try to write a migration. 
+
+Migrations has two parts : up and down. 
+
+Up : contains the code which will make new changes in the db when we run the migrations. 
+
+down : contains the code which will revert the changes made by the migrations
 
 
+1) sequelize cli can automatically create this for us
+```
+npx sequelize-cli migration:generate --name create-hotel-table
+```
+By defualt this will create a js file .
 
+
+## Changes in the Migration file
+
+
+1) Create the migration code in the file
+```
+module.exports = {
+  async up (queryInterface) {
+   await queryInterface.sequelize.query(`
+      CREATE TABLE IF NOT EXISTS Hotels (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        address VARCHAR(255) NOT NULL,
+        location VARCHAR(255) NOT NULL,
+        createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      );
+    `);
+  },
+
+  async down (queryInterface) {
+    await queryInterface.sequelize.query(`
+      DROP TABLE IF EXISTS Hotels;
+    `);
+  }
+};
+
+```
+
+2) Apply the migration 
+```
+npx sequelize-cli db:migrate 
+```
+
+3) To revert the last migration
+```
+npx sequelize-cli db:migrate:undo
+```
 
 
 
