@@ -1,8 +1,8 @@
-## Need for ORM
+### ⬢ New Section : Need for ORM
 
 For simple Db query , if we could write some js/ts code to interacting with the database. We should have flexibilty that we can write both db queries and or js/ts query.
 
-## Definitions
+## ⬢ New Section : Definitions
 
 ORM : Object Relational Mapper ( for rdbms data).  
 ODM : Object document mapper (for document data like mongodb)
@@ -14,7 +14,7 @@ Some ORMs are : Sequelize , PRISMA (rdbms + mongo also) , TypeORM
 
 
 
-## Folder Description
+## ⬢ New Section : Folder Description
 
 1) Models : here we will write how our database is going to look like .
 Example : hotel will have name , address , pincode etc . We will write the
@@ -26,10 +26,10 @@ Seed data means initial data.
 3) Migrations : It is used to create versions of our db.
 
 
-## Setup
+## ⬢ New Section : Setup
 
-orm : sequelize,
-driver : mysql2 ( driver of mysql),
+orm : sequelize. 
+driver : mysql2 ( driver of mysql). 
 cli : sequelizecli (as dev dependency) 
 
 1) Write a file .sequelizerc file . It has configurations which are picked up by cli
@@ -56,7 +56,7 @@ Now folders as per the .sequelizerc file will be created
 3) Now setup the config.ts as described
 
 
-## Setting the config file (it is config.js only)
+## ⬢ New Section : Setting the config file (it is config.js only)
 
 1) Import from .env
 ```
@@ -122,7 +122,7 @@ export default config;
 
 
 
-## Check whether sequelize is able to connect to db
+## ⬢ New Section : Check whether sequelize is able to connect to db
 
 We will try to write a migration. 
 
@@ -140,7 +140,7 @@ npx sequelize-cli migration:generate --name create-hotel-table
 By defualt this will create a js file .
 
 
-## Changes in the Migration file
+## ⬢ New Section : Changes in the Migration file
 
 
 1) Create the migration code in the file
@@ -180,3 +180,93 @@ npx sequelize-cli db:migrate:undo
 
 
 
+## ⬢ New Section : Converting to typescript
+
+1) For the migrations file ( rename it to .ts)
+```
+import { QueryInterface } from "sequelize";
+
+
+export default {
+  async up (queryInterface : QueryInterface) {
+   await queryInterface.sequelize.query(`
+      CREATE TABLE IF NOT EXISTS hotels (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        address VARCHAR(255) NOT NULL,
+        location VARCHAR(255) NOT NULL,
+        createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        updatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      );
+    `);
+  },
+
+  async down (queryInterface : QueryInterface) {
+    await queryInterface.sequelize.query(`
+      DROP TABLE IF EXISTS Hotels;
+    `);
+  }
+};
+```
+2) Change the config.js to db.config.js. and its code to common js
+```
+const dotenv = require('dotenv');
+dotenv.config();
+
+const config = {
+  development: {
+    username: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    host: process.env.DB_HOST,
+    dialect: 'mysql'
+  }
+};
+
+module.exports = config;
+
+```
+
+
+3) Create a new file src/config/sequelize.config.js
+```
+require('ts-node/register')
+const config = require('./db.config')
+
+module.exports = config;
+```
+In this code this line require('ts-node/register') tells nodejs to dynamically
+compile and run the typescript file on the go. So , this file will get converted to .js and then sequelize will be able to make sense of it 
+
+4) Change the .sequelizerc file
+```
+const path = require('path');
+
+module.exports = {
+  seedersPath : path.resolve('./src/db/seeders'),
+  modelsPath  : path.resolve('./src/db/models'),
+  migrationsPath : path.resolve('./src/db/migrations'),
+  config : path.resolve('./src/config/sequelize.config.js')
+}
+```
+
+In this code this line require('ts-node/register') tells Nodejs to dynamically
+compile and run the typescript file on the go. So , this file will get converted to .js and then sequelize will be able to make sense of it 
+
+
+
+
+## ⬢ New Section : Running to confirm
+
+1) Execute this command
+```
+npx sequelize-cli db:migrate 
+```
+
+2) Then in the sql
+```
+use airbnb_dev;
+show tables
+
+desc hotels;
+```
