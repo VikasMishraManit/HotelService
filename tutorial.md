@@ -263,10 +263,86 @@ compile and run the typescript file on the go. So , this file will get converted
 npx sequelize-cli db:migrate 
 ```
 
-2) Then in the sql
+2) Then in the sql to confirm this 
 ```
 use airbnb_dev;
 show tables
 
 desc hotels;
 ```
+
+3) To revert the last migration
+```
+npx sequelize-cli db:migrate:undo
+```
+
+
+
+
+
+## ⬢ New Section : Add Rating (New Migartions) to the hotel tables
+
+Let us say now we want to store the rating for our hotels also. Then we can do so by creating a new migration.
+
+1) Create a new migration
+```
+npx sequelize-cli migration:generate --name add-ratings-hotel-table
+```
+This is create a new js file . Rename it to a typescript file
+
+
+
+2) Add the migrations in the new file created
+```
+import { QueryInterface } from 'sequelize';
+
+module.exports = {
+  async up (queryInterface: QueryInterface) {
+    await queryInterface.sequelize.query(`
+      ALTER TABLE Hotels
+      ADD COLUMN rating DECIMAL(3,2) DEFAULT 0,
+      ADD COLUMN rating_count INT DEFAULT 0;
+    `);
+  },
+
+  async down (queryInterface: QueryInterface) {
+    await queryInterface.sequelize.query(`
+      ALTER TABLE Hotels
+      DROP COLUMN rating,
+      DROP COLUMN rating_count;
+    `);
+  }
+};
+
+```
+
+
+
+## ⬢ New Section : Add script for migrations
+
+1) Install sequelize-cli locally
+```
+npm install --save-dev sequelize-cli
+```
+
+2) Add a migrate script in package.json file (for handy )
+```
+ "scripts": {
+    "start": "ts-node src/server.ts",
+    "dev": "nodemon src/server.ts",
+    "migrate": "sequelize-cli db:migrate",
+    "rollback": "sequelize-cli db:migrate:undo"
+  }
+```
+
+3) Now the new commands are
+```
+npm run migrate
+```
+and
+```
+npm run rollback
+```
+
+
+
