@@ -346,3 +346,124 @@ npm run rollback
 
 
 
+
+## ⬢ New Section : API to interact with the DB
+
+1) Models layer is going to ensure that whatever is the schema in the db , with respect to the same schema we have a class in js/ts through which we can interact with the db. 
+Technically this class is db in js/ts
+
+2) Inside the models folder create a hotel.ts file . Note the hotel which we will create in ts will not be propogated in the db (untill all checks and rest things are done) so its properties like id , createdAt etc will be optional
+
+
+
+
+## ⬢ New Section : Creating the db/models/hotel.ts file
+
+1) Code of the file
+```
+import { CreationOptional, InferAttributes, InferCreationAttributes, Model } from "sequelize";
+
+
+class Hotel extends Model<InferAttributes<Hotel>, InferCreationAttributes<Hotel>> {
+  declare id: CreationOptional<number>;
+  declare name: string;
+  declare address: string;
+  declare location: string;
+  declare rating: number;
+  declare ratingCount: number;
+  declare createdAt: CreationOptional<Date>;
+  declare updatedAt: Date;
+}
+```
+
+2) There is a fundamental problem with this code , how it is going to map with the Hotel table automatically (say if we had one more table with same properties but different name)
+
+3) We have to manually connect it to the desired table. This is done using the Hotel.init() which describes which table to map , and which column to map. 
+
+Note : Whatever rule that are created in db layer ( using the migrations) , ideally they should match with whatever being created in the TS layer 
+
+   (3.1) We will create a sequelize.ts file in models folder which will have the configuration to tell which table we will have to map to
+       ```
+       import { Sequelize } from "sequelize";
+import { dbConfig } from "../../config";
+
+const sequelize = new Sequelize({
+  dialect: "mysql",
+  host: dbConfig.DB_HOST, 
+  username: dbConfig.DB_USER,
+  password: dbConfig.DB_PASSWORD,
+  database: dbConfig.DB_NAME,
+  logging: true
+});
+
+export default sequelize;
+```
+
+    (3.2) Now the Hotel.init({object1} , {object2}) here object1 tells about the column mapping and object2 tells about the table mapping
+```
+import { CreationOptional, InferAttributes, InferCreationAttributes, Model } from "sequelize";
+import sequelize from "./sequelize";
+
+
+class Hotel extends Model<InferAttributes<Hotel>, InferCreationAttributes<Hotel>> {
+  declare id: CreationOptional<number>;
+  declare name: string;
+  declare address: string;
+  declare location: string;
+  declare rating: number;
+  declare ratingCount: number;
+  declare createdAt: CreationOptional<Date>;
+  declare updatedAt: Date;
+}
+
+Hotel.init(
+  {
+    id: {
+      type: "INTEGER",
+      autoIncrement: true,
+      primaryKey: true,
+    },
+    name: {
+      type: "VARCHAR(255)",
+      allowNull: false,
+    },
+    address: {
+      type: "VARCHAR(255)",
+      allowNull: false,
+    },
+    location: {
+      type: "VARCHAR(255)",
+      allowNull: false,
+    },
+    rating: {
+      type: "FLOAT",
+      defaultValue: 0,
+    },
+    ratingCount: {
+      type: "INTEGER",
+      defaultValue: 0,
+    },
+    createdAt: {
+      type: "DATE",
+      allowNull: false,
+      defaultValue: new Date(),
+    },
+    updatedAt: {
+      type: "DATE",
+      allowNull: false,
+      defaultValue: new Date(),
+    },  
+
+  },
+  {
+    tableName: "hotels",
+    sequelize: sequelize
+
+  });
+
+
+
+export default Hotel;
+```
+
+
