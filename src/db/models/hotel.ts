@@ -10,7 +10,7 @@ class Hotel extends Model<InferAttributes<Hotel>, InferCreationAttributes<Hotel>
   declare rating: number;
   declare ratingCount: number;
   declare createdAt: CreationOptional<Date>;
-  declare updatedAt: Date;
+  declare updatedAt: CreationOptional<Date>;
 }
 
 Hotel.init(
@@ -42,19 +42,19 @@ Hotel.init(
     },
     createdAt: {
       type: "DATE",
-      allowNull: false,
       defaultValue: new Date(),
     },
     updatedAt: {
       type: "DATE",
-      allowNull: false,
       defaultValue: new Date(),
     },  
 
   },
   {
     tableName: "hotels",
-    sequelize: sequelize
+    sequelize: sequelize,
+    underscored: true,
+    timestamps: true,
 
   });
 

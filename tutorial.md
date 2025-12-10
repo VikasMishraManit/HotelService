@@ -280,7 +280,7 @@ npx sequelize-cli db:migrate:undo
 
 
 
-## ⬢ New Section : Add Rating (New Migartions) to the hotel tables
+## ⬢ New Section : Add Rating (New Migrations) to the hotel tables
 
 Let us say now we want to store the rating for our hotels also. Then we can do so by creating a new migration.
 
@@ -380,7 +380,7 @@ class Hotel extends Model<InferAttributes<Hotel>, InferCreationAttributes<Hotel>
 
 3) We have to manually connect it to the desired table. This is done using the Hotel.init() which describes which table to map , and which column to map. 
 
-Note : Whatever rule that are created in db layer ( using the migrations) , ideally they should match with whatever being created in the TS layer 
+Note : Whatever rule that are created in db layer ( using the migrations) , ideally they should match with whatever being created in the TS layer like which columns have default assigned , which can take null etc .
 
 4)  We will create a sequelize.ts file in models folder which will have the configuration to tell which table we will have to map to
 ```
@@ -413,7 +413,7 @@ class Hotel extends Model<InferAttributes<Hotel>, InferCreationAttributes<Hotel>
   declare rating: number;
   declare ratingCount: number;
   declare createdAt: CreationOptional<Date>;
-  declare updatedAt: Date;
+  declare updatedAt: CreationOptional<Date>;
 }
 
 Hotel.init(
@@ -457,7 +457,9 @@ Hotel.init(
   },
   {
     tableName: "hotels",
-    sequelize: sequelize
+    sequelize: sequelize,
+    underscored: true,
+    timestamps: true,
 
   });
 
@@ -466,4 +468,75 @@ Hotel.init(
 export default Hotel;
 ```
 
+
+
+
+## ⬢ New Section : Setting this for testing it.
+
+1) Go to the server.ts file and make the app.listen callback as async and create a hotel there
+```
+import express from 'express';
+import { serverConfig } from './config';
+import v1Router from './routers/v1/index.router';
+import v2Router from './routers/v2/index.router';
+import { appErrorHandler, genericErrorHandler } from './middlewares/error.middleware';
+import logger from './config/logger.config';
+import { attachCorrelationIdMiddleware } from './middlewares/correlation.middleware';
+import sequelize from './db/models/sequelize';
+import Hotel from './db/models/hotel';
+const app = express();
+
+app.use(express.json());
+
+/**
+ * Registering all the routers and their corresponding routes with out app server object.
+ */
+
+app.use(attachCorrelationIdMiddleware);
+app.use('/api/v1', v1Router);
+app.use('/api/v2', v2Router); 
+
+
+/**
+ * Add the error handler middleware
+ */
+
+app.use(appErrorHandler);
+app.use(genericErrorHandler);
+
+
+app.listen(serverConfig.PORT, async () => {
+    logger.info(`Server is running on http://localhost:${serverConfig.PORT}`);
+    logger.info(`Press Ctrl+C to stop the server.`);
+
+    try{
+        await sequelize.authenticate(); // Test the database connection
+        logger.info('Database connection has been established successfully.');
+
+        const hotel = await Hotel.create({
+            name: 'Test Hotel',
+            address: '123 Test St, Test City',
+            location: 'Test City Center',
+            rating: 4.5,
+            ratingCount: 100
+        });
+
+        logger.info('Test hotel created:', hotel.toJSON()); 
+
+    } catch (error) {
+        logger.error('Error while connecting to the database:', error);
+    }
+});
+```
+
+2) Run npm run dev to confirm it 
+
+3) To create new Hotel , first stop the server (since it has nodemon)
+
+4) To fetch all the hotels in this function . First comment out the hotel creation and then fetch them
+```
+// to fetch all hotels
+        const hotels = await Hotel.findAll();
+        logger.info(`Number of hotels in the database: ${hotels.length}`);
+```
 
