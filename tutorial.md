@@ -1,4 +1,4 @@
-### ⬢ New Section : Need for ORM
+## ⬢ New Section : Need for ORM
 
 For simple Db query , if we could write some js/ts code to interacting with the database. We should have flexibilty that we can write both db queries and or js/ts query.
 
@@ -382,9 +382,9 @@ class Hotel extends Model<InferAttributes<Hotel>, InferCreationAttributes<Hotel>
 
 Note : Whatever rule that are created in db layer ( using the migrations) , ideally they should match with whatever being created in the TS layer 
 
-   (3.1) We will create a sequelize.ts file in models folder which will have the configuration to tell which table we will have to map to
-       ```
-       import { Sequelize } from "sequelize";
+4)  We will create a sequelize.ts file in models folder which will have the configuration to tell which table we will have to map to
+```
+import { Sequelize } from "sequelize";
 import { dbConfig } from "../../config";
 
 const sequelize = new Sequelize({
@@ -399,7 +399,7 @@ const sequelize = new Sequelize({
 export default sequelize;
 ```
 
-    (3.2) Now the Hotel.init({object1} , {object2}) here object1 tells about the column mapping and object2 tells about the table mapping
+5) Now the Hotel.init({object1} , {object2}) here object1 tells about the column mapping and object2 tells about the table mapping
 ```
 import { CreationOptional, InferAttributes, InferCreationAttributes, Model } from "sequelize";
 import sequelize from "./sequelize";
