@@ -545,7 +545,8 @@ app.listen(serverConfig.PORT, async () => {
 
 ## ⬢ New Section : Writing the API
 
-1) DTO Layer : From some client (say postman) we will be passing some request body , that is going to have some data of the hotel. Whenever we have to define some object that will be transfered , we define a DTO layer
+1) DTO Layer : From some client (say postman) we will be passing some request body , that is going to have some data of the hotel. Whenever we have to define some object that will be transfered , we define a DTO layer. 
+src/dto/hotel.dto.ts
 ```
 export type createHotelDTO = {
   name: string;
@@ -557,7 +558,9 @@ export type createHotelDTO = {
 ```
 
 
-2) Repository layer : It will have all the db interactions. It will have all the database opeartions (like createHotel , findAllHotels etc)
+2) Repository layer : It will have all the db interactions. It will have all the database opeartions (like createHotel , findAllHotels etc). 
+src/repositories/hotel.repository.ts
+
 ```
 import Hotel from "../db/models/hotel";
 import { createHotelDTO } from "../dto/hotel.dto";
@@ -588,4 +591,117 @@ export async function getHotelById(hotelId: number) {
     logger.info(`Hotel with ID: ${hotelId} retrieved successfully.`);
     return hotel;
 }
+```
+
+3) Service Layer : It is going to have all the bussiness level logic (ex: "Rating must be between 0 and 5","Hotel name must be unique","Cannot delete a hotel that has active bookings")
+src/services/hotel.service.ts
+```
+import { createHotelDTO } from "../dto/hotel.dto";
+import { createHotel, getHotelById } from "../repositories/hotel.repository";
+
+
+
+export async function createHotelService(hotelData: createHotelDTO) {
+    const hotel = await createHotel(hotelData);
+    return hotel;
+}
+
+export async function getHotelByIdService(id: number) {
+    const hotel = await getHotelById(id);
+    return hotel;
+}
+```
+
+4) Controller Layer : It handles HTTP request/response, extract data from req, send proper responses. 
+src/controllers/hotel.controller.ts
+```
+import { NextFunction, Request, Response } from "express";
+import { createHotelService, getHotelByIdService } from "../services/hotel.service";
+
+export async function createHotelHandler(req: Request, res: Response, next: NextFunction) {
+    // 1. Call the service layer to create a hotel
+    const hotelResponse = await createHotelService(req.body);
+    
+    // 2. Send the response
+    res.status(201).json({
+        message: "Hotel created successfully",
+        data: hotelResponse,
+        success: true
+    });
+}
+
+// getHotelByIdHandler can be implemented similarly 
+ export async function getHotelByIdHandler(req: Request, res: Response, next: NextFunction) { 
+    const hotelId = await getHotelByIdService(Number(req.params.id));
+    
+    res.status(200).json({
+        message: "Hotel retrieved successfully",
+        data: hotelId,
+        success: true
+    }); 
+ }
+
+```
+
+5) Routing layer (routers/v1/hotel.router.ts) : It defines API endpoints and map them to controller methods. 
+```
+import express from 'express';
+import { createHotelHandler, getHotelByIdHandler } from '../../controllers/hotel.controller';
+
+const hotelRouter = express.Router();
+
+hotelRouter.post('/', createHotelHandler); // TODO: Resolve this TS compilation issue
+
+hotelRouter.get('/id', getHotelByIdHandler);
+
+export default hotelRouter;
+```
+
+
+
+6) Validation Layer (src/validators/hotel.validator.ts)
+```
+import { z } from "zod";
+
+export const hotelSchema = z.object({
+    name: z.string().min(1),
+    address: z.string().min(1),
+    location: z.string().min(1),
+    rating: z.number().min(0).optional(),
+    ratingCount: z.number().min(0).optional()
+})
+```
+
+7) Register the routing routers/index.router.ts file
+```
+import express from 'express';
+import pingRouter from './ping.router';
+import hotelRouter from './hotel.router';
+
+const v1Router = express.Router();
+
+
+
+v1Router.use('/ping',  pingRouter);
+v1Router.use('/hotels', hotelRouter);
+
+export default v1Router;
+```
+
+8) Add the validation logic in the src/routers/v1/hotel.router.ts
+```
+import express from 'express';
+import { createHotelHandler, getHotelByIdHandler } from '../../controllers/hotel.controller';
+import { validateRequestBody } from '../../validators';
+import { hotelSchema } from '../../validators/hotel.validator';
+
+const hotelRouter = express.Router();
+
+hotelRouter.post('/', 
+  validateRequestBody(hotelSchema),
+  createHotelHandler); // TODO: Resolve this TS compilation issue
+
+hotelRouter.get('/id', getHotelByIdHandler);
+
+export default hotelRouter;
 ```
