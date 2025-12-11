@@ -410,8 +410,8 @@ class Hotel extends Model<InferAttributes<Hotel>, InferCreationAttributes<Hotel>
   declare name: string;
   declare address: string;
   declare location: string;
-  declare rating: number;
-  declare ratingCount: number;
+  declare rating?: number;
+  declare ratingCount?: number;
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
 }
@@ -540,3 +540,52 @@ app.listen(serverConfig.PORT, async () => {
         logger.info(`Number of hotels in the database: ${hotels.length}`);
 ```
 
+
+
+
+## ⬢ New Section : Writing the API
+
+1) DTO Layer : From some client (say postman) we will be passing some request body , that is going to have some data of the hotel. Whenever we have to define some object that will be transfered , we define a DTO layer
+```
+export type createHotelDTO = {
+  name: string;
+  address: string;
+  location: string;
+  rating?: number;
+  ratingCount?: number;
+};
+```
+
+
+2) Repository layer : It will have all the db interactions. It will have all the database opeartions (like createHotel , findAllHotels etc)
+```
+import Hotel from "../db/models/hotel";
+import { createHotelDTO } from "../dto/hotel.dto";
+import logger from "../config/logger.config";
+import { NotFoundError } from "../utils/errors/app.error";
+
+
+export async function createHotel(hotelData: createHotelDTO) {
+    const hotel = await Hotel.create({
+      name: hotelData.name,
+      address: hotelData.address,
+      location: hotelData.location,
+      rating: hotelData.rating,
+      ratingCount: hotelData.ratingCount
+    })
+
+    logger.info(`Hotel created with ID: ${hotel.id}`);
+
+    return hotel;
+}
+
+export async function getHotelById(hotelId: number) {
+    const hotel = await Hotel.findByPk(hotelId);
+    if (!hotel) {
+        logger.error(`Hotel with ID: ${hotelId} not found.`);
+        throw new NotFoundError(`Hotel with ID: ${hotelId} not found.`);
+    }
+    logger.info(`Hotel with ID: ${hotelId} retrieved successfully.`);
+    return hotel;
+}
+```
